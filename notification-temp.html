@@ -1,58 +1,63 @@
 <html>
-<body>
-<button onclick="connect()">Connect to Web Bluetooth</button>
-<div>
-    <h2>Temp</h2>
-    <p>Temprature: <span id="temp-span"></span></p>
-    <p>Humidity: <span id="hum-span"></span></p>
-</div>
-<div id="statusDiv"></div>
-<script>
-function connect() {
-  var statusDiv = document.querySelector("#statusDiv");
-  var tempSpan = document.querySelector("#temp-span");
-  var humSpan = document.querySelector("#hum-span");
-  var options =  {
-    filters: [
-      {namePrefix: 'Thingy'},
-    ],
-    optionalServices: [ "7b340000-105b-2b38-3a74-2932f884e90e" ]
-  };
-  var busy = false;
-  var gatt, service;
-  statusDiv.textContent = "Connecting";
-  navigator.bluetooth.requestDevice(options).then(function(device) {
-    console.log('Device: ' + JSON.stringify(device));
-    return device.gatt.connect();
-  }).then(function(g) {
-   gatt = g;
-   // Get our custom service
-   return gatt.getPrimaryService("7b340000-105b-2b38-3a74-2932f884e90e");
-  }).then(function(s) {
-    service = s;
-    // Get the Acceleorometer characteristic
-    return service.getCharacteristic("7b340003-105b-2b38-3a74-2932f884e90e");
-  }).then(function(characteristic) {    
-    // When we get a notification, write the data to a div below the button
-    characteristic.addEventListener('characteristicvaluechanged', function(event) {
-      var value = event.target.value.buffer; // an arraybuffer
-      var array = new Int8Array(value);
-      tempSpan.textContent = array[0];
-      humSpan.textContent = array[1];
-      statusDiv.textContent = "";
 
-    });
-    // Now start getting notifications
-    return characteristic.startNotifications();
-  }).then(function() {
-    statusDiv.textContent = "Waiting for data...";
-    //gatt.disconnect();
-    console.log("Done!");
-  }).catch(function(error) {
-    statusDiv.textContent = "Ooops - " + error;
-    console.log("Something went wrong. " + error);
-  });
-}
-</script>
+<body style="
+font-family: sans-serif;
+padding: 20px;
+">
+    <button onclick="connect()">Connect to Web Bluetooth</button>
+    <div>
+        <h2>Temp</h2>
+        <p>Temprature: <span id="temp-span"></span>°C</p>
+        <p>Humidity: <span id="hum-span"></span>%</p>
+    </div>
+    <div id="statusDiv"></div>
+    <script>
+        function connect() {
+            var statusDiv = document.querySelector("#statusDiv");
+            var tempSpan = document.querySelector("#temp-span");
+            var humSpan = document.querySelector("#hum-span");
+            var options = {
+                filters: [
+                    { namePrefix: 'Thingy' },
+                ],
+                optionalServices: ["7b340000-105b-2b38-3a74-2932f884e90e"]
+            };
+            var busy = false;
+            var gatt, service;
+            statusDiv.textContent = "Connecting";
+            navigator.bluetooth.requestDevice(options).then(function (device) {
+                console.log('Device: ' + JSON.stringify(device));
+                return device.gatt.connect();
+            }).then(function (g) {
+                gatt = g;
+                // Get our custom service
+                return gatt.getPrimaryService("7b340000-105b-2b38-3a74-2932f884e90e");
+            }).then(function (s) {
+                service = s;
+                // Get the Acceleorometer characteristic
+                return service.getCharacteristic("7b340003-105b-2b38-3a74-2932f884e90e");
+            }).then(function (characteristic) {
+                // When we get a notification, write the data to a div below the button
+                characteristic.addEventListener('characteristicvaluechanged', function (event) {
+                    var value = event.target.value.buffer; // an arraybuffer
+                    var array = new Int8Array(value);
+                    tempSpan.textContent = array[0];
+                    humSpan.textContent = array[1];
+                    statusDiv.textContent = "";
+
+                });
+                // Now start getting notifications
+                return characteristic.startNotifications();
+            }).then(function () {
+                statusDiv.textContent = "Waiting for data...";
+                //gatt.disconnect();
+                console.log("Done!");
+            }).catch(function (error) {
+                statusDiv.textContent = "Ooops - " + error;
+                console.log("Something went wrong. " + error);
+            });
+        }
+    </script>
 </body>
+
 </html>
